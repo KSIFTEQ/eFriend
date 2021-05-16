@@ -5,13 +5,17 @@ from PyQt5.QAxContainer import QAxWidget
 from collections import defaultdict
 import pandas as pd
 
-class Login(QMainWindow):
+class eFriend(QMainWindow):
     def __init__(self):
+        self.app =  QApplication(sys.argv)   
         self.acct_no  = None
         self.acct_pwd = None
-
-        self.app =  QApplication(sys.argv)   
+        self.df_portfolio    = None
+        self.df_transactions = None
         super().__init__()  
+        self.Login()
+    
+    def Login(self):
         self.setWindowTitle("계좌정보입력")
         self.setGeometry(300, 300, 320, 120)
 
@@ -36,17 +40,14 @@ class Login(QMainWindow):
         button.clicked.connect(self.__get_acct_info)     
         button.clicked.connect(self.close)
         self.app.exec_()   
-          
+
     def __get_acct_info(self):
         self.acct_no  = self.enter_acct.text()
         self.acct_pwd = self.enter_pwd.text() 
 
-class Portfolio:
-    def __init__(self, Login):
-        self.df = None
-        self.acct_no  = Login.acct_no
-        self.acct_pwd = Login.acct_pwd        
+    def Portfolio(self):
         self.__request_SATPS()
+        return self.df_portfolio
 
     def __request_SATPS(self):
         self.conn = QAxWidget("ITGExpertCtl.ITGExpertCtlCtrl.1")
@@ -61,10 +62,10 @@ class Portfolio:
         self.conn.SetSingleData(8, "N")
         self.conn.SetSingleData(9, "01")
         self.conn.RequestData("SATPS")
-        self.conn.ReceiveData.connect(self.__conn_receivedata)  
+        self.conn.ReceiveData.connect(self.__conn_receivedata_SATPS)  
         input("Enter!")
 
-    def __conn_receivedata(self):
+    def __conn_receivedata_SATPS(self):
         dict_SATPS = {
             0  : "종목코드",
             1  : "종목명",
@@ -82,14 +83,11 @@ class Portfolio:
                 data = self.conn.GetMultiData(0, i, j, 0)
                 dict_acct[dict_SATPS[j]].append(data)
 
-        self.df = pd.DataFrame(dict_acct)
+        self.df_portfolio = pd.DataFrame(dict_acct)
 
-class Transactions:
-    def __init__(self, Login):
-        self.df = None
-        self.acct_no  = Login.acct_no
-        self.acct_pwd = Login.acct_pwd
+    def Transactions(self):
         self.__request_SDOC()
+        return self.df_transactions
 
     def __request_SDOC(self):
         self.conn = QAxWidget("ITGExpertCtl.ITGExpertCtlCtrl.1")
@@ -103,10 +101,10 @@ class Transactions:
         self.conn.SetSingleData(8, "01")
         self.conn.SetSingleData(11, "00")
         self.conn.RequestData("SDOC")
-        self.conn.ReceiveData.connect(self.__conn_receivedata)  
+        self.conn.ReceiveData.connect(self.__conn_receivedata_SDOC)  
         input("Enter!")
         
-    def __conn_receivedata(self):
+    def __conn_receivedata_SDOC(self):
         dict_SDOC = {
             0  : "주문일자",
             4  : "주문구분명",
@@ -126,4 +124,4 @@ class Transactions:
                 data = self.conn.GetMultiData(0, i, j, 0)
                 dict_acct[dict_SDOC[j]].append(data)
 
-        self.df = pd.DataFrame(dict_acct)
+        self.df_transactions = pd.DataFrame(dict_acct)
