@@ -7,15 +7,22 @@ import pandas as pd
 
 class eFriend(QMainWindow):
     def __init__(self):
-        self.app =  QApplication(sys.argv)   
+        print('__init__')
         self.acct_no  = None
         self.acct_pwd = None
         self.df_portfolio    = None
         self.df_transactions = None
+
+        self.app  = QApplication(sys.argv)   
+        self.conn = QAxWidget("ITGExpertCtl.ITGExpertCtlCtrl.1")
+
         super().__init__()  
         self.Login()
+        # self.__request_SATPS()
+        # self.__request_SDOC()
     
     def Login(self):
+        print('Login')
         self.setWindowTitle("계좌정보입력")
         self.setGeometry(300, 300, 320, 120)
 
@@ -42,15 +49,22 @@ class eFriend(QMainWindow):
         self.app.exec_()   
 
     def __get_acct_info(self):
+        print('__get_acct_info')
         self.acct_no  = self.enter_acct.text()
         self.acct_pwd = self.enter_pwd.text() 
 
     def Portfolio(self):
+        print('Potfolio')
         self.__request_SATPS()
         return self.df_portfolio
 
+    def Transactions(self, start_date, end_date):
+        print('Transactions')
+        # self.__request_SDOC(start_date, end_date)
+        return self.df_transactions
+
     def __request_SATPS(self):
-        self.conn = QAxWidget("ITGExpertCtl.ITGExpertCtlCtrl.1")
+        print('__request_SATPS')
         self.conn.SetSingleData(0, self.acct_no[:-2])
         self.conn.SetSingleData(1, self.acct_no[-2:])       
         self.conn.SetSingleData(2, self.conn.GetEncryptPassword(self.acct_pwd))
@@ -62,10 +76,26 @@ class eFriend(QMainWindow):
         self.conn.SetSingleData(8, "N")
         self.conn.SetSingleData(9, "01")
         self.conn.RequestData("SATPS")
-        self.conn.ReceiveData.connect(self.__conn_receivedata_SATPS)  
-        input("Enter!")
+        self.conn.ReceiveData.connect(self.__conn_receivedata_SATPS) 
+        input("Enter")
+
+    def __request_SDOC(self, start_date, end_date):
+        print('__request_SDOC')
+        self.conn = QAxWidget("ITGExpertCtl.ITGExpertCtlCtrl.1")
+        self.conn.SetSingleData(0, self.acct_no[:-2])
+        self.conn.SetSingleData(1, self.acct_no[-2:])        
+        self.conn.SetSingleData(2, self.conn.GetEncryptPassword(self.acct_pwd))
+        self.conn.SetSingleData(3, start_date)
+        self.conn.SetSingleData(4, end_date)
+        self.conn.SetSingleData(5, "00")
+        self.conn.SetSingleData(6, "00")
+        self.conn.SetSingleData(8, "01")
+        self.conn.SetSingleData(11, "00")
+        self.conn.RequestData("SDOC")
+        self.conn.ReceiveData.connect(self.__conn_receivedata_SDOC)  
 
     def __conn_receivedata_SATPS(self):
+        print('__conn_receivedata_SATPS')
         dict_SATPS = {
             0  : "종목코드",
             1  : "종목명",
@@ -84,27 +114,10 @@ class eFriend(QMainWindow):
                 dict_acct[dict_SATPS[j]].append(data)
 
         self.df_portfolio = pd.DataFrame(dict_acct)
+        print(self.df_portfolio)
 
-    def Transactions(self):
-        self.__request_SDOC()
-        return self.df_transactions
-
-    def __request_SDOC(self):
-        self.conn = QAxWidget("ITGExpertCtl.ITGExpertCtlCtrl.1")
-        self.conn.SetSingleData(0, self.acct_no[:-2])
-        self.conn.SetSingleData(1, self.acct_no[-2:])        
-        self.conn.SetSingleData(2,self.conn.GetEncryptPassword(self.acct_pwd))
-        self.conn.SetSingleData(3, "20200101")
-        self.conn.SetSingleData(4, "20210331")
-        self.conn.SetSingleData(5, "00")
-        self.conn.SetSingleData(6, "00")
-        self.conn.SetSingleData(8, "01")
-        self.conn.SetSingleData(11, "00")
-        self.conn.RequestData("SDOC")
-        self.conn.ReceiveData.connect(self.__conn_receivedata_SDOC)  
-        input("Enter!")
-        
     def __conn_receivedata_SDOC(self):
+        print('__conn_receivedata_SDOC')
         dict_SDOC = {
             0  : "주문일자",
             4  : "주문구분명",
