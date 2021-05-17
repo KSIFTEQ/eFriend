@@ -16,10 +16,9 @@ class eFriend(QMainWindow):
         self.app  = QApplication(sys.argv)   
         self.conn = QAxWidget("ITGExpertCtl.ITGExpertCtlCtrl.1")
 
-        super().__init__()  
+        super().__init__()
         self.Login()
-        # self.__request_SATPS()
-        # self.__request_SDOC()
+
     
     def Login(self):
         print('Login')
@@ -60,7 +59,7 @@ class eFriend(QMainWindow):
 
     def Transactions(self, start_date, end_date):
         print('Transactions')
-        # self.__request_SDOC(start_date, end_date)
+        self.__request_SDOC(start_date, end_date)
         return self.df_transactions
 
     def __request_SATPS(self):
@@ -93,6 +92,7 @@ class eFriend(QMainWindow):
         self.conn.SetSingleData(11, "00")
         self.conn.RequestData("SDOC")
         self.conn.ReceiveData.connect(self.__conn_receivedata_SDOC)  
+        input("Enter")
 
     def __conn_receivedata_SATPS(self):
         print('__conn_receivedata_SATPS')
@@ -114,7 +114,6 @@ class eFriend(QMainWindow):
                 dict_acct[dict_SATPS[j]].append(data)
 
         self.df_portfolio = pd.DataFrame(dict_acct)
-        print(self.df_portfolio)
 
     def __conn_receivedata_SDOC(self):
         print('__conn_receivedata_SDOC')
