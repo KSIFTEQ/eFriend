@@ -5,7 +5,7 @@ from collections        import defaultdict
 from PyQt5.QtWidgets    import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton
 from PyQt5.QAxContainer import QAxWidget
 
-class eFriend(QMainWindow):
+class Login(QMainWindow):
     def __init__(self):
         self.acct_no  = None
         self.acct_pwd = None
@@ -16,7 +16,7 @@ class eFriend(QMainWindow):
         self.conn = QAxWidget("ITGExpertCtl.ITGExpertCtlCtrl.1")
 
         super().__init__()
-        self.Login()
+        self.__login_popup()
 
         acct_list = [self.conn.GetAccount(i) for i in range(self.conn.GetAccountCount())]
         if self.acct_no in acct_list:
@@ -25,7 +25,7 @@ class eFriend(QMainWindow):
             err = "계좌번호가 잘못되었습니다"
             raise ValueError(err)
     
-    def Login(self):
+    def __login_popup(self):
         self.setWindowTitle("계좌정보입력")
         self.setGeometry(300, 300, 320, 120)
 
