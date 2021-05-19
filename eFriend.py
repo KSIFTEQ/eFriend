@@ -1,13 +1,12 @@
-import pdb
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton
-from PyQt5.QAxContainer import QAxWidget
-from collections import defaultdict
 import pandas as pd
+
+from collections        import defaultdict
+from PyQt5.QtWidgets    import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton
+from PyQt5.QAxContainer import QAxWidget
 
 class eFriend(QMainWindow):
     def __init__(self):
-        print('__init__')
         self.acct_no  = None
         self.acct_pwd = None
         self.df_portfolio    = None
@@ -19,9 +18,14 @@ class eFriend(QMainWindow):
         super().__init__()
         self.Login()
 
+        acct_list = [self.conn.GetAccount(i) for i in range(self.conn.GetAccountCount())]
+        if self.acct_no in acct_list:
+            print("Login Success")
+        else:
+            err = "계좌번호가 잘못되었습니다"
+            raise ValueError(err)
     
     def Login(self):
-        print('Login')
         self.setWindowTitle("계좌정보입력")
         self.setGeometry(300, 300, 320, 120)
 
@@ -48,22 +52,18 @@ class eFriend(QMainWindow):
         self.app.exec_()   
 
     def __get_acct_info(self):
-        print('__get_acct_info')
         self.acct_no  = self.enter_acct.text()
         self.acct_pwd = self.enter_pwd.text() 
 
     def Portfolio(self):
-        print('Potfolio')
         self.__request_SATPS()
         return self.df_portfolio
 
     def Transactions(self, start_date, end_date):
-        print('Transactions')
         self.__request_SDOC(start_date, end_date)
         return self.df_transactions
 
     def __request_SATPS(self):
-        print('__request_SATPS')
         self.conn.SetSingleData(0, self.acct_no[:-2])
         self.conn.SetSingleData(1, self.acct_no[-2:])       
         self.conn.SetSingleData(2, self.conn.GetEncryptPassword(self.acct_pwd))
@@ -76,10 +76,9 @@ class eFriend(QMainWindow):
         self.conn.SetSingleData(9, "01")
         self.conn.RequestData("SATPS")
         self.conn.ReceiveData.connect(self.__conn_receivedata_SATPS) 
-        input("Enter")
+
 
     def __request_SDOC(self, start_date, end_date):
-        print('__request_SDOC')
         self.conn = QAxWidget("ITGExpertCtl.ITGExpertCtlCtrl.1")
         self.conn.SetSingleData(0, self.acct_no[:-2])
         self.conn.SetSingleData(1, self.acct_no[-2:])        
@@ -92,10 +91,8 @@ class eFriend(QMainWindow):
         self.conn.SetSingleData(11, "00")
         self.conn.RequestData("SDOC")
         self.conn.ReceiveData.connect(self.__conn_receivedata_SDOC)  
-        input("Enter")
 
     def __conn_receivedata_SATPS(self):
-        print('__conn_receivedata_SATPS')
         dict_SATPS = {
             0  : "종목코드",
             1  : "종목명",
@@ -116,7 +113,6 @@ class eFriend(QMainWindow):
         self.df_portfolio = pd.DataFrame(dict_acct)
 
     def __conn_receivedata_SDOC(self):
-        print('__conn_receivedata_SDOC')
         dict_SDOC = {
             0  : "주문일자",
             4  : "주문구분명",
